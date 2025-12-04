@@ -1,0 +1,2 @@
+This program is run through the python scrpt found in analysis.py. Both the DP approach and Greedy approach use the same logic for reading from the file so that should be identical time complexity for access. That is why the time complexity is measured from the 
+python file and not the cpp implementation. The python script will run multiple tests on the cpp files for greedy 
