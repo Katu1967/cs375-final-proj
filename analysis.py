@@ -44,25 +44,40 @@ def testCode(test_sizes=None):
     
     runtimes = []
     test_filename = "test_input.txt"
+    output_filename = "outfile.txt"
     
     #get rid of cold start penalty so data is not skewed
     print("Performing warm-up run...")
     generateInputs(10, test_filename)
-    os.system(f"./dp_prog {test_filename} outfile.txt > /dev/null 2>&1")
+    os.system(f"./dp_prog {test_filename} {output_filename} > /dev/null 2>&1")
     
     for size in test_sizes:
         generateInputs(size, test_filename)
         print(f"Testing with {size} classes...")
         
-        #measure time
-        start_time = time.time()
-        os.system(f"./dp_prog {test_filename} outfile.txt")
-        end_time = time.time()
+        # Run the program
+        os.system(f"./dp_prog {test_filename} {output_filename}")
+        # read from file
+        try:
+            with open(output_filename, 'r') as file:
+                num_rooms_line = file.readline().strip()
+                runtime_line = file.readline().strip()
+
+                
+                num_rooms = int(num_rooms_line.split()[-1])
+                
+                # Convert runtime from milliseconds to seconds
+                runtime_ms = float(runtime_line)
+                runtime_sec = runtime_ms / 1000.0
+                
+                runtimes.append(runtime_sec)
+                print(f"  Rooms needed: {num_rooms}, Runtime: {runtime_sec:.6f} seconds")
+
+        except FileNotFoundError:
+            print(f"Error: The file '{output_filename}' was not found.")
+        except (ValueError, IndexError) as e:
+            print(f"Error parsing output: {e}")
         
-        elapsed_time = end_time - start_time
-        runtimes.append(elapsed_time)
-        
-        print(f"  Runtime: {elapsed_time:.6f} seconds")
         print()
     
     return test_sizes, runtimes
@@ -70,13 +85,33 @@ def testCode(test_sizes=None):
 
 def plotRuntimes(sizes, runtimes, algorithm_name, save_path):
     """
-    Plot runtime vs input size 
+    Plot runtime with input size
     """
     plt.figure(figsize=(10, 6))
-    plt.plot(sizes, runtimes, marker='o', linewidth=2, markersize=8)
+    
+    #create scatter plot
+    plt.scatter(sizes, runtimes, s=100, alpha=0.6, color='blue', label='Measured Runtime')
+    
+    #calc linear line of best fit
+    coefficients_linear = np.polyfit(sizes, runtimes, 1)
+    polynomial_linear = np.poly1d(coefficients_linear)
+    line_x = np.linspace(min(sizes), max(sizes), 100)
+    line_y_linear = polynomial_linear(line_x)
+    
+    plt.plot(line_x, line_y_linear, color='red', linewidth=2, label='Linear Fit')
+    
+
+    nlogn_values = sizes * np.log(sizes)
+    coefficients_nlogn = np.polyfit(nlogn_values, runtimes, 1)
+    line_y_nlogn = coefficients_nlogn[0] * line_x * np.log(line_x) + coefficients_nlogn[1]
+    
+    
+    plt.plot(line_x, line_y_nlogn, color='green', linewidth=2, label='n*log(n) Fit')
+    
     plt.xlabel('Number of Classes', fontsize=12)
-    plt.ylabel('Runtime (seconds)', fontsize=12)
+    plt.ylabel('Runtime (milliseconds)', fontsize=12)
     plt.title(f'{algorithm_name} - Runtime vs Input Size', fontsize=14)
+    plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(save_path)
@@ -92,7 +127,16 @@ if __name__ == "__main__":
     print()
     
     #run tests
-    sizes, runtimes = testCode([10, 15, 20, 30, 40, 50, 100, 500, 700, 800,  1000, 1500, 2000, 3000, 10000, 15000, 20000, 30000, 40000])
+
+    num = 100
+    test_vals = []
+
+    while num <= 100000:
+        test_vals.append(num)
+        num = num + 100
+
+
+    sizes, runtimes = testCode(test_vals)
     
     print("=" * 60)
     print("Test Results Summary:")

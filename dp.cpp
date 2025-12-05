@@ -18,16 +18,16 @@ using namespace std;
 
 //struct for classes after they are split into start and end events 
 struct Events {
-    int time;
+    long time;
     bool type; //1 for an end event 0 for a start event
-    int class_num;
+    long class_num;
 };
 
 //struct for classes before they are processed
 struct Classes {
-    int class_num;
-    int start;
-    int end;
+    long class_num;
+    long start;
+    long end;
 };
 
 //helper struct for custom comparisons
@@ -94,18 +94,18 @@ void sortEvents(vector <Events> &event_list){
 }
 
 //actual DP logic
-int findMinRooms(vector <Classes> class_list){
+long findMinRooms(vector <Classes> class_list){
 
     //call helpers
     vector <Events> event_list = createEvents(class_list);
     sortEvents(event_list);
 
-    vector <int> dp_table;
+    vector <long> dp_table;
     dp_table.resize(event_list.size() + 1);
-    int min_rooms = 0;
+    long min_rooms = 0;
     //initially zero, index is 1
     dp_table[0] = 0;
-    int idx = 1;
+    long idx = 1;
 
     for(Events e : event_list){
         
@@ -147,7 +147,7 @@ int main(int argv, char* argc[]){
     }
 
 
-    int n, class_num, begin, finish;
+    long n, class_num, begin, finish;
 
     infile >> n; 
 
@@ -166,19 +166,19 @@ int main(int argv, char* argc[]){
     }
 
     
+    auto start = chrono::high_resolution_clock::now();
+    long min_rooms =  findMinRooms(raw_data);    
+    auto stop = chrono::high_resolution_clock::now();
+    chrono::duration<double, micro> duration = stop - start;
 
-    int min_rooms =  findMinRooms(raw_data);
+    ofstream outfile(out_file);
+
+    outfile << min_rooms << endl;
+
+    outfile << duration.count() << endl;
 
 
-    cout << "The Minimum # of rooms needed is: " << min_rooms << endl;
-
-
-
-
-
-
-
-
+    return 0;
 
 
 }
